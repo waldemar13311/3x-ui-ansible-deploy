@@ -1,0 +1,10 @@
+[project]
+name = "red-panda-project"
+version = "0.1.0"
+description = "Red Panda project"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ansible>=14.0.0,<15.0.0",
+    "ansible-lint>=26.6.0,<27.0.0",
+]

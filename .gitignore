@@ -1,0 +1,11 @@
+sudo_password_file
+
+crash.log
+crash.*.log
+
+.ansible/*
+
+ansible/sudo_password_file
+
+.venv/*
+.uv/

@@ -1,0 +1,65 @@
+- name: Ping playbook
+  hosts: all
+  gather_facts: true
+  become: false
+
+  vars:
+    pwe_dir: "/opt/3x-ui/"
+    xui_parent_dir: "/usr/local"
+    xui_folder: "/usr/local/x-ui"
+    xui_service: "/etc/systemd/system"
+    os_release: "ubuntu"
+    arch: "arm64"
+    xui_version: "v3.5.0"
+    download_url: "https://github.com/MHSanaei/3x-ui/releases/download/{{ xui_version }}/x-ui-linux-{{ arch }}.tar.gz"
+
+  tasks:
+    - name: Install required system packages
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600 # Обновить кэш только в том случае, если он обновлялся больше 1 часа (3600 секунд) назад
+        name:
+          - cron
+          - curl
+          - tar
+          - tzdata
+          - socat
+          - ca-certificates
+          - openssl
+        state: present
+
+    - name: Скачиваем архив 3x-ui во временную директорию
+      ansible.builtin.get_url:
+        url: "{{ xui_download_url }}"
+        dest: "/tmp/x-ui-linux-{{ arch }}-{{ xui_version }}.tar.gz"
+        mode: '0644'
+      register: xui_archive
+
+    - name: Распаковываем архив в /usr/local/
+      ansible.builtin.unarchive:
+        src: "{{ xui_archive.dest }}"
+        dest: "{{ xui_parent_dir }}"
+        remote_src: true
+      when: xui_archive.changed
+
+    - name: Grant execution permissions to x-ui binaries and scripts
+      ansible.builtin.file:
+        path: "{{ item }}"
+        mode: '0755'
+      loop:
+        - "/usr/local/x-ui/x-ui"
+        - "/usr/local/x-ui/x-ui.sh"
+        - "/usr/local/x-ui/bin/xray-linux-{{ arch_map[ansible_architecture] }}"
+        - "/usr/local/x-ui/bin/mtg-linux-{{ arch_map[ansible_architecture] }}"
+
+    - name: Download x-ui management script and set execution permissions
+      ansible.builtin.get_url:
+        url: "https://raw.githubusercontent.com/MHSanaei/3x-ui/main/x-ui.sh"
+        dest: "/usr/bin/x-ui"
+        username: root
+        group: root
+        mode: '0755'
+        force: true # true - чтобы скрипт перезаписывался при наличии обновлений
+
+
+# Остановился на отлаживании config_after_install (желательно проверит, что мой нынешний плейбук делает тоже, что и скрипт до момента config_after_install)

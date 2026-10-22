@@ -1,0 +1,4 @@
+all:
+  hosts:
+    proxy-worker-1:
+      ansible_host: proxy-worker-1.home
